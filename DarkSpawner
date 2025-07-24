@@ -1,30 +1,28 @@
+-- Dark Spawner UI with Floating Icon Enhancements (Full Script w/ Dupe Buttons & Loading Effects Restored)
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
 local player = Players.LocalPlayer
 
-local ScreenGui = Instance.new("ScreenGui")
+local ScreenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 ScreenGui.Name = "DarkSpawnerUI"
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
-ScreenGui.Parent = player:WaitForChild("PlayerGui")
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- Fullscreen Black Screen
-local FakeScreen = Instance.new("Frame")
+-- Black screen + loading effect
+local FakeScreen = Instance.new("Frame", ScreenGui)
 FakeScreen.Size = UDim2.new(1, 0, 1, 0)
 FakeScreen.BackgroundColor3 = Color3.new(0, 0, 0)
 FakeScreen.BackgroundTransparency = 0
 FakeScreen.Visible = false
 FakeScreen.ZIndex = 1000
-FakeScreen.Parent = ScreenGui
 
-local Blur = Instance.new("BlurEffect")
+local Blur = Instance.new("BlurEffect", Lighting)
 Blur.Size = 0
-Blur.Parent = Lighting
 
-local LoadingText = Instance.new("TextLabel")
+local LoadingText = Instance.new("TextLabel", FakeScreen)
 LoadingText.Text = "LOADING SPAWNER..."
 LoadingText.Font = Enum.Font.SourceSansBold
 LoadingText.TextSize = 32
@@ -33,9 +31,7 @@ LoadingText.BackgroundTransparency = 1
 LoadingText.Position = UDim2.new(0.5, -150, 0.5, -20)
 LoadingText.Size = UDim2.new(0, 300, 0, 40)
 LoadingText.TextXAlignment = Enum.TextXAlignment.Center
-LoadingText.Visible = true
 LoadingText.ZIndex = 1001
-LoadingText.Parent = FakeScreen
 
 coroutine.wrap(function()
 	while true do
@@ -47,23 +43,21 @@ coroutine.wrap(function()
 end)()
 
 -- Main Frame
-local MainFrame = Instance.new("Frame")
+local MainFrame = Instance.new("Frame", ScreenGui)
 MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 MainFrame.Size = UDim2.new(0.6, 0, 0.4, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 MainFrame.BorderSizePixel = 0
-MainFrame.Parent = ScreenGui
 
 -- TopBar
-local TopBar = Instance.new("Frame")
+local TopBar = Instance.new("Frame", MainFrame)
 TopBar.Size = UDim2.new(1, 0, 0.12, 0)
 TopBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 TopBar.BorderSizePixel = 0
-TopBar.Parent = MainFrame
 
 -- Title
-local Title = Instance.new("TextLabel")
+local Title = Instance.new("TextLabel", TopBar)
 Title.Text = "Dark Spawner"
 Title.Font = Enum.Font.SourceSansSemibold
 Title.TextSize = 18
@@ -72,9 +66,89 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Size = UDim2.new(0.7, 0, 1, 0)
 Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.Parent = TopBar
 
--- Dragging (PC Only)
+-- Close Button
+local CloseButton = Instance.new("TextButton", TopBar)
+CloseButton.Text = "-"
+CloseButton.Font = Enum.Font.SourceSansBold
+CloseButton.TextSize = 18
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.BackgroundTransparency = 1
+CloseButton.Position = UDim2.new(1, -25, 0, 0)
+CloseButton.Size = UDim2.new(0, 25, 1, 0)
+
+-- Floating Button
+local FloatingButton = Instance.new("ImageButton")
+FloatingButton.Image = "rbxassetid://15140054726"
+FloatingButton.Size = UDim2.new(0, 48, 0, 48)
+FloatingButton.Position = UDim2.new(0.1 + math.random(), -24, 0.2 + math.random(), -24)
+FloatingButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+FloatingButton.AutoButtonColor = false
+FloatingButton.Visible = false
+FloatingButton.Parent = ScreenGui
+FloatingButton.ZIndex = 10
+
+local uicorner = Instance.new("UICorner", FloatingButton)
+uicorner.CornerRadius = UDim.new(1, 0)
+
+local stroke = Instance.new("UIStroke", FloatingButton)
+stroke.Color = Color3.fromRGB(100, 100, 255)
+stroke.Thickness = 2
+stroke.Transparency = 0.2
+
+local floatingLabel = Instance.new("TextLabel", FloatingButton)
+floatingLabel.Text = "DS"
+floatingLabel.Font = Enum.Font.GothamBold
+floatingLabel.TextSize = 12
+floatingLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+floatingLabel.BackgroundTransparency = 1
+floatingLabel.Size = UDim2.new(1, 0, 1, 0)
+floatingLabel.ZIndex = 11
+
+coroutine.wrap(function()
+	while true do
+		local newSize = math.random(40, 60)
+		TweenService:Create(FloatingButton, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Size = UDim2.new(0, newSize, 0, newSize)
+		}):Play()
+		wait(1.2)
+	end
+end)()
+
+-- Draggable Floating Icon
+local dragging = false
+local dragInput, dragStart, startPos
+FloatingButton.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = FloatingButton.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then dragging = false end
+		end)
+	end
+end)
+FloatingButton.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
+end)
+UserInputService.InputChanged:Connect(function(input)
+	if dragging and input == dragInput then
+		local delta = input.Position - dragStart
+		FloatingButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+end)
+
+CloseButton.MouseButton1Click:Connect(function()
+	MainFrame.Visible = false
+	FloatingButton.Visible = true
+end)
+
+FloatingButton.MouseButton1Click:Connect(function()
+	MainFrame.Visible = true
+	FloatingButton.Visible = false
+end)
+
+-- Dragging main UI via topbar
 if not UserInputService.TouchEnabled then
 	local dragging, dragInput, dragStart, startPos
 	TopBar.InputBegan:Connect(function(input)
@@ -98,15 +172,14 @@ if not UserInputService.TouchEnabled then
 	end)
 end
 
--- Spawner Area
-local Body = Instance.new("Frame")
+-- Body UI
+local Body = Instance.new("Frame", MainFrame)
 Body.Size = UDim2.new(0.9, 0, 0.7, 0)
 Body.Position = UDim2.new(0.05, 0, 0.2, 0)
 Body.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Body.BorderSizePixel = 0
-Body.Parent = MainFrame
 
-local Label = Instance.new("TextLabel")
+local Label = Instance.new("TextLabel", Body)
 Label.Text = "Pet & Seed Spawner  |  New Update"
 Label.Font = Enum.Font.SourceSansSemibold
 Label.TextSize = 16
@@ -114,9 +187,8 @@ Label.TextColor3 = Color3.fromRGB(255, 255, 255)
 Label.BackgroundTransparency = 1
 Label.Size = UDim2.new(1, 0, 0.2, 0)
 Label.TextXAlignment = Enum.TextXAlignment.Center
-Label.Parent = Body
 
-local DupeButton = Instance.new("TextButton")
+local DupeButton = Instance.new("TextButton", Body)
 DupeButton.Text = "Generate Dupe Script"
 DupeButton.Font = Enum.Font.SourceSansBold
 DupeButton.TextSize = 14
@@ -124,23 +196,19 @@ DupeButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
 DupeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 DupeButton.Size = UDim2.new(1, 0, 0.2, 0)
 DupeButton.Position = UDim2.new(0, 0, 0.25, 0)
-DupeButton.Parent = Body
 
--- Loading Bar
-local LoadingBarBack = Instance.new("Frame")
+local LoadingBarBack = Instance.new("Frame", Body)
 LoadingBarBack.Size = UDim2.new(1, 0, 0.08, 0)
 LoadingBarBack.Position = UDim2.new(0, 0, 0.48, 0)
 LoadingBarBack.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 LoadingBarBack.BorderSizePixel = 0
-LoadingBarBack.Parent = Body
 
-local LoadingBarFill = Instance.new("Frame")
+local LoadingBarFill = Instance.new("Frame", LoadingBarBack)
 LoadingBarFill.Size = UDim2.new(0, 0, 1, 0)
 LoadingBarFill.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
 LoadingBarFill.BorderSizePixel = 0
-LoadingBarFill.Parent = LoadingBarBack
 
-local LoadingPercent = Instance.new("TextLabel")
+local LoadingPercent = Instance.new("TextLabel", LoadingBarFill)
 LoadingPercent.Text = "0%"
 LoadingPercent.Font = Enum.Font.SourceSansBold
 LoadingPercent.TextSize = 14
@@ -151,9 +219,7 @@ LoadingPercent.Position = UDim2.new(1, -5, 0.5, 0)
 LoadingPercent.Size = UDim2.new(0, 40, 0, 20)
 LoadingPercent.TextXAlignment = Enum.TextXAlignment.Right
 LoadingPercent.Visible = false
-LoadingPercent.Parent = LoadingBarFill
 
--- Fake Loading Sequence
 DupeButton.MouseButton1Click:Connect(function()
 	LoadingBarFill.Size = UDim2.new(0, 0, 1, 0)
 	LoadingPercent.Visible = true
@@ -168,12 +234,9 @@ DupeButton.MouseButton1Click:Connect(function()
 	end
 
 	LoadingPercent.Text = "✅"
-
 	FakeScreen.Visible = true
 	TweenService:Create(Blur, TweenInfo.new(0.5), {Size = 24}):Play()
-
-	wait(15) -- 🔁 Long black screen duration
-
+	wait(15)
 	FakeScreen.Visible = false
 	TweenService:Create(Blur, TweenInfo.new(0.5), {Size = 0}):Play()
 end)
